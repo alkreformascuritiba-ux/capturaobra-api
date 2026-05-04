@@ -19,7 +19,7 @@ async function callClaude(system, messages) {
 
   const body = JSON.stringify({
     model: 'claude-sonnet-4-5-20251001',
-    max_tokens: 2048,
+    max_tokens: 4096,
     system,
     messages,
   });
@@ -33,6 +33,7 @@ async function callClaude(system, messages) {
         'Content-Type': 'application/json',
         'x-api-key': API_KEY,
         'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'pdfs-2024-09-25',
         'Content-Length': Buffer.byteLength(body),
       },
     }, (res) => {
@@ -65,13 +66,11 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  // Health check
   if (req.method === 'GET' && req.url === '/') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ status: 'ok', service: 'CAPTURAOBRA Orçamentista IA' }));
   }
 
-  // API route
   if (req.method === 'POST' && req.url === '/api/chat') {
     let body = '';
     req.on('data', chunk => body += chunk);
@@ -79,13 +78,41 @@ const server = http.createServer(async (req, res) => {
       try {
         if (!API_KEY) {
           res.writeHead(500, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({
-            error: 'ANTHROPIC_API_KEY não configurada.'
-          }));
+          return res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY não configurada.' }));
         }
 
-        const { system, messages } = JSON.parse(body);
-        const content = await callClaude(system, messages);
+        const { system, messages, pdf, pdfName } = JSON.parse(body);
+
+        // Se vier PDF, injeta como document block na última mensagem do usuário
+        let processedMessages = messages;
+        if (pdf) {
+          processedMessages = messages.map((msg, idx) => {
+            if (idx === messages.length - 1 && msg.role === 'user') {
+              const textContent = typeof msg.content === 'string' ? msg.content : '';
+              return {
+                role: 'user',
+                content: [
+                  {
+                    type: 'document',
+                    source: {
+                      type: 'base64',
+                      media_type: 'application/pdf',
+                      data: pdf,
+                    },
+                    title: pdfName || 'projeto.pdf',
+                  },
+                  {
+                    type: 'text',
+                    text: textContent || 'Analise este projeto e gere um orçamento detalhado.',
+                  },
+                ],
+              };
+            }
+            return msg;
+          });
+        }
+
+        const content = await callClaude(system, processedMessages);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ content }));
       } catch (err) {
@@ -96,7 +123,7 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Static files (serve index.html para uso local)
+  // Static files (uso local)
   const filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url.replace(/^\//, ''));
   fs.readFile(filePath, (err, data) => {
     if (err) {
@@ -116,9 +143,8 @@ server.listen(PORT, () => {
   console.log('');
   if (!API_KEY) {
     console.log('  ATENÇÃO: ANTHROPIC_API_KEY não encontrada!');
-    console.log('  Execute: export ANTHROPIC_API_KEY=sua_chave_aqui');
   } else {
-    console.log('  API Key OK — IA pronta!');
+    console.log('  Chave da API OK — IAOTA!');
   }
   console.log('');
 });
