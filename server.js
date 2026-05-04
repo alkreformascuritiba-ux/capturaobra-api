@@ -14,7 +14,7 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-async function callClaude(system, messages) {
+async function callClaude(system, messages, hasPdf) {
   const https = require('https');
 
   const body = JSON.stringify({
@@ -24,18 +24,20 @@ async function callClaude(system, messages) {
     messages,
   });
 
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': API_KEY,
+    'anthropic-version': '2023-06-01',
+    'Content-Length': Buffer.byteLength(body),
+  };
+  if (hasPdf) headers['anthropic-beta'] = 'pdfs-2024-09-25';
+
   return new Promise((resolve, reject) => {
     const req = https.request({
       hostname: 'api.anthropic.com',
       path: '/v1/messages',
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'pdfs-2024-09-25',
-        'Content-Length': Buffer.byteLength(body),
-      },
+      headers,
     }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
@@ -112,7 +114,7 @@ const server = http.createServer(async (req, res) => {
           });
         }
 
-        const content = await callClaude(system, processedMessages);
+        const content = await callClaude(system, processedMessages, !!pdf);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ content }));
       } catch (err) {
