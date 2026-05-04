@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orçamentista — CAPTURAOBRA</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #E8650A;
+      --orange-hover: #C9540A;
+      --orange-light: #FDF0E8;
+      --orange-border: #F5A264;
+      --sidebar-bg: #1A1208;
+      --sidebar-text: rgba(255,255,255,0.75);
+      --sidebar-active: rgba(232,101,10,0.18);
+      --bg: #F5F3EF;
+      --surface: #FFFFFF;
+      --border: rgba(0,0,0,0.08);
+      --text: #1A1208;
+      --text-muted: #7A7065;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .sidebar-logo {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--orange);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.3px;
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 2px;
+    }
+
+    .sidebar-section {
+      padding: 16px 12px 6px;
+    }
+
+    .sidebar-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      padding: 0 6px;
+      margin-bottom: 6px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      color: var(--sidebar-text);
+      font-size: 13px;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .nav-item.active { background: var(--sidebar-active); color: var(--orange); }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    .nav-item.active .nav-icon { opacity: 1; }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 14px 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .version-badge {
+      font-size: 10px;
+      color: rgba(255,255,255,0.25);
+      text-align: center;
+    }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .topbar-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .topbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #3B6D11;
+    }
+
+    .status-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ── PAGES ── */
+    .page { display: none; flex: 1; overflow: hidden; }
+    .page.active { display: flex; }
+
+    /* ── ORCAMENTISTA PAGE ── */
+    #page-orcamentista {
+      flex-direction: row;
+      gap: 0;
+    }
+
+    .chat-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .msg-wrap {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      animation: msgIn 0.2s ease;
+    }
+
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-wrap.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .avatar.bot { background: var(--orange); color: #fff; }
+    .avatar.user { background: #1A1208; color: rgba(255,255,255,0.8); }
+
+    .bubble {
+      max-width: 78%;
+      padding: 12px 15px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    .bubble.bot {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px 12px 12px 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .bubble.user {
+      background: var(--orange);
+      color: #fff;
+      border-radius: 12px 3px 12px 12px;
+    }
+
+    /* table inside bubble */
+    .bubble table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+
+    .bubble th {
+      background: var(--orange-light);
+      color: var(--orange);
+      padding: 6px 10px;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid var(--orange-border);
+      white-space: nowrap;
+    }
+
+    .bubble td {
+      padding: 6px 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      vertical-align: top;
+    }
+
+    .bubble tr:last-child td { border-bottom: none; }
+    .bubble tr.total td { font-weight: 600; background: var(--orange-light); color: var(--orange); }
+    .bubble tr.subtotal td { font-weight: 500; background: #f9f7f4; }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+    .tag {
+      background: var(--orange-light);
+      color: var(--orange);
+      border: 1px solid var(--orange-border);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tag:hover { background: var(--orange); color: #fff; }
+
+    .typing-dots { display: flex; gap: 4px; padding: 4px 0; }
+    .typing-dots span {
+      width: 7px; height: 7px;
+      background: var(--orange-border);
+      border-radius: 50%;
+      animation: dot 1s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes dot { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+
+    /* input area */
+    .chat-input-area {
+      padding: 14px 20px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .quick-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip:hover { border-color: var(--orange); color: var(--orange); }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .chat-textarea {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13.5px;
+      font-family: inherit;
+      resize: none;
+      min-height: 42px;
+      max-height: 100px;
+      outline: none;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.4;
+      transition: border-color 0.15s;
+    }
+
+    .chat-textarea:focus { border-color: var(--orange); background: #fff; }
+
+    .send-btn {
+      width: 42px;
+      height: 42px;
+      background: var(--orange);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .send-btn:hover { background: var(--orange-hover); }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+    /* right panel */
+    .info-panel {
+      width: 240px;
+      flex-shrink: 0;
+      border-left: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 16px;
+      gap: 14px;
+    }
+
+    .panel-section h4 {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .ref-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .ref-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ref-dot.green { background: #3B6D11; }
+    .ref-dot.blue { background: #185FA5; }
+    .ref-dot.amber { background: #854F0B; }
+
+    .scope-tag {
+      display: inline-block;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin: 2px;
+    }
+
+    .tip-box {
+      background: var(--orange-light);
+      border: 1px solid var(--orange-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--orange-hover);
+      line-height: 1.5;
+    }
+
+    /* ── HISTORICO PAGE ── */
+    #page-historico {
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .page-inner {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    .page-header {
+      margin-bottom: 20px;
+    }
+
+    .page-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .page-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      opacity: 0.4;
+    }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .history-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+
+    .history-card:hover { border-color: var(--orange-border); box-shadow: var(--shadow); }
+
+    .hc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .hc-title { font-size: 13px; font-weight: 600; }
+    .hc-date { font-size: 11px; color: var(--text-muted); }
+
+    .hc-total {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--orange);
+      margin-bottom: 6px;
+    }
+
+    .hc-meta { font-size: 11px; color: var(--text-muted); }
+
+    /* ── TABELAS PAGE ── */
+    #page-tabelas {
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tabelas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .tabela-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .tabela-card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .tabela-card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .tabela-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .badge-green { background: #EAF3DE; color: #3B6D11; }
+    .badge-blue { background: #E6F1FB; color: #185FA5; }
+    .badge-amber { background: #FAEEDA; color: #854F0B; }
+    .badge-orange { background: var(--orange-light); color: var(--orange); }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-badge">
+      <div class="logo-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <rect x="1" y="7" width="3" height="8" rx="1" fill="white" opacity="0.9"/>
+          <rect x="6" y="4" width="3" height="11" rx="1" fill="white"/>
+          <rect x="11" y="1" width="3" height="14" rx="1" fill="white" opacity="0.75"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">CAPTURAOBRA</div>
+        <div class="logo-sub">Hub de Inteligência</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <div class="nav-item active" onclick="showPage('orcamentista', this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor" opacity="0.7"/>
+        <rect x="9" y="2" width="5" height="5" rx="1" fill="currentColor"/>
+        <rect x="2" y="9" width="5" height="5" rx="1" fill="currentColor"/>
+        <rect x="9" y="9" width="5" height="5" rx="1" fill="currentColor" opacity="0.5"/>
+      </svg>
+      Orçamentista IA
+    </div>
+    <div class="nav-item" onclick="showPage('historico', this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M8 5V8.5L10.5 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      Histórico
+    </div>
+    <div class="nav-item" onclick="showPage('tabelas', this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="3" width="12" height="2" rx="1" fill="currentColor"/>
+        <rect x="2" y="7" width="12" height="2" rx="1" fill="currentColor" opacity="0.6"/>
+        <rect x="2" y="11" width="8" height="2" rx="1" fill="currentColor" opacity="0.4"/>
+      </svg>
+      Tabelas de Referência
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Configurações</div>
+    <div class="nav-item" onclick="showPage('config', this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M8 2V3.5M8 12.5V14M14 8H12.5M3.5 8H2M12.2 3.8L11.1 4.9M4.9 11.1L3.8 12.2M12.2 12.2L11.1 11.1M4.9 4.9L3.8 3.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      Configurações
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="version-badge">v1.0 · Paraná 2025</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbarTitle">Orçamentista IA</div>
+      <div class="topbar-sub" id="topbarSub">SINAPI · TCPO · SEOP-PR · Mercado Paraná</div>
+    </div>
+    <div class="topbar-right">
+      <div class="status-dot"></div>
+      <span class="status-label">IA conectada</span>
+    </div>
+  </div>
+
+  <!-- PAGE: ORÇAMENTISTA -->
+  <div class="page active" id="page-orcamentista">
+    <div class="chat-panel">
+      <div class="chat-messages" id="chatMessages">
+
+        <!-- Welcome message -->
+        <div class="msg-wrap">
+          <div class="avatar bot">CO</div>
+          <div class="bubble bot">
+            <strong>Olá! Sou o Orçamentista IA da CAPTURAOBRA.</strong><br><br>
+            Especializado em construção civil, reformas, impermeabilização, pintura predial, manutenção e muito mais — calibrado para o mercado do <strong>Paraná</strong> com referências atualizadas para 2025.
+            <br><br>
+            Descreva o serviço com metragem e cidade, ou use os atalhos abaixo:
+            <div class="tag-row">
+              <span class="tag" onclick="fillAndSend('Impermeabilização de laje plana 80m² em Curitiba')">Impermeabilização laje</span>
+              <span class="tag" onclick="fillAndSend('Pintura fachada predial 500m² em Londrina')">Pintura predial</span>
+              <span class="tag" onclick="fillAndSend('Reforma completa de banheiro 6m²')">Reforma banheiro</span>
+              <span class="tag" onclick="fillAndSend('Revestimento cerâmico 60m² piso e parede')">Revestimento cerâmico</span>
+              <span class="tag" onclick="fillAndSend('Troca de telhado fibrocimento 120m² em Maringá')">Troca de telhado</span>
+              <span class="tag" onclick="fillAndSend('Drywall divisória 30m²')">Drywall</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="chat-input-area">
+        <div class="quick-chips">
+          <span class="chip" onclick="fillAndSend('Impermeabilização de laje 100m²')">Impermeabilização</span>
+          <span class="chip" onclick="fillAndSend('Pintura predial fachada 300m²')">Pintura predial</span>
+          <span class="chip" onclick="fillAndSend('Reforma apartamento 65m²')">Reforma apto</span>
+          <span class="chip" onclick="fillAndSend('Instalação elétrica residencial 80m²')">Elétrica</span>
+          <span class="chip" onclick="fillAndSend('Hidráulica banheiro e cozinha')">Hidráulica</span>
+        </div>
+        <div class="input-row">
+          <textarea class="chat-textarea" id="chatInput"
+            placeholder="Descreva o serviço — ex: impermeabilização de laje 80m² em Curitiba..."
+            rows="1"
+            onkeydown="handleKey(event)"
+            oninput="autoResize(this)"
+          ></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Enviar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M2 8H14M14 8L9 3M14 8L9 13" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="info-panel">
+      <div class="panel-section">
+        <h4>Tabelas de Referência</h4>
+        <div class="ref-item"><div class="ref-dot green"></div>SINAPI/CEF — Paraná</div>
+        <div class="ref-item"><div class="ref-dot blue"></div>SEOP-PR 2025</div>
+        <div class="ref-item"><div class="ref-dot amber"></div>TCPO — Pini</div>
+        <div class="ref-item"><div class="ref-dot green"></div>Mercado Curitiba / RMC</div>
+        <div class="ref-item"><div class="ref-dot blue"></div>Interior Paraná</div>
+      </div>
+
+      <div class="panel-section">
+        <h4>Especialidades</h4>
+        <div>
+          <span class="scope-tag">Impermeabilização</span>
+          <span class="scope-tag">Pintura predial</span>
+          <span class="scope-tag">Reforma</span>
+          <span class="scope-tag">Revestimento</span>
+          <span class="scope-tag">Telhado</span>
+          <span class="scope-tag">Drywall</span>
+          <span class="scope-tag">Elétrica</span>
+          <span class="scope-tag">Hidráulica</span>
+          <span class="scope-tag">Estrutura</span>
+          <span class="scope-tag">Fundação</span>
+          <span class="scope-tag">Facilities</span>
+        </div>
+      </div>
+
+      <div class="tip-box">
+        💡 <strong>Dica:</strong> Informe a cidade do PR para ajuste de índice regional. Curitiba e RMC têm acréscimo de 8–12% sobre a referência nacional.
+      </div>
+
+      <div class="panel-section">
+        <h4>Índices Regionais PR</h4>
+        <div class="ref-item" style="font-size:11px;">
+          <div class="ref-dot amber"></div>
+          BDI obras privadas: 22–28%
+        </div>
+        <div class="ref-item" style="font-size:11px;">
+          <div class="ref-dot blue"></div>
+          BDI obras públicas: 25–30%
+        </div>
+        <div class="ref-item" style="font-size:11px;">
+          <div class="ref-dot green"></div>
+          Curitiba/RMC: +8–12%
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: HISTÓRICO -->
+  <div class="page" id="page-historico">
+    <div class="page-inner">
+      <div class="page-header">
+        <h2>Histórico de Orçamentos</h2>
+        <p>Orçamentos gerados nesta sessão</p>
+      </div>
+      <div id="historicoContent">
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p>Nenhum orçamento gerado ainda.<br>Use o Orçamentista IA para começar.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: TABELAS -->
+  <div class="page" id="page-tabelas">
+    <div class="page-inner">
+      <div class="page-header">
+        <h2>Tabelas de Referência</h2>
+        <p>Fontes utilizadas pelo orçamentista para precificação no Paraná</p>
+      </div>
+      <div class="tabelas-grid">
+        <div class="tabela-card">
+          <h3>SINAPI — Sistema Nacional</h3>
+          <p>Sistema Nacional de Pesquisa de Custos e Índices da Construção Civil, mantido pela CEF e IBGE. Base principal para composições de serviços.</p>
+          <span class="tabela-badge badge-green">● Atualizado mensalmente</span>
+        </div>
+        <div class="tabela-card">
+          <h3>SEOP-PR</h3>
+          <p>Secretaria de Estado de Obras Públicas do Paraná. Referência obrigatória para obras públicas no estado. Inclui índices regionais por macrorregião.</p>
+          <span class="tabela-badge badge-blue">● Paraná oficial</span>
+        </div>
+        <div class="tabela-card">
+          <h3>TCPO — Pini</h3>
+          <p>Tabela de Composições de Preços para Orçamentos. Referência privada com composições detalhadas por serviço e insumo.</p>
+          <span class="tabela-badge badge-amber">● Referência nacional</span>
+        </div>
+        <div class="tabela-card">
+          <h3>Pesquisa de Mercado Paraná</h3>
+          <p>Valores coletados junto a fornecedores, lojas de materiais e prestadores de serviço de Curitiba, Londrina, Maringá, Cascavel e Ponta Grossa.</p>
+          <span class="tabela-badge badge-orange">● Regional 2025</span>
+        </div>
+        <div class="tabela-card">
+          <h3>BDI — Obras Privadas PR</h3>
+          <p>Benefícios e Despesas Indiretas aplicados sobre o custo direto. Para obras privadas no Paraná: 22% a 28% conforme porte e complexidade.</p>
+          <span class="tabela-badge badge-green">● 22–28%</span>
+        </div>
+        <div class="tabela-card">
+          <h3>Encargos Sociais</h3>
+          <p>CLT/carteira assinada: ~70% sobre o salário. PJ ou autônomo: ~25%. Impacta diretamente no custo de mão de obra apresentado nas composições.</p>
+          <span class="tabela-badge badge-blue">● CLT + PJ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: CONFIG -->
+  <div class="page" id="page-config">
+    <div class="page-inner">
+      <div class="page-header">
+        <h2>Configurações</h2>
+        <p>Parâmetros do orçamentista</p>
+      </div>
+      <div style="max-width:480px; display:flex; flex-direction:column; gap:14px;">
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px;">CIDADE PADRÃO (PARANÁ)</label>
+          <select id="cidadeConfig" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);outline:none;">
+            <option value="Curitiba">Curitiba</option>
+            <option value="Londrina">Londrina</option>
+            <option value="Maringá">Maringá</option>
+            <option value="Cascavel">Cascavel</option>
+            <option value="Ponta Grossa">Ponta Grossa</option>
+            <option value="Foz do Iguaçu">Foz do Iguaçu</option>
+            <option value="São José dos Pinhais">São José dos Pinhais</option>
+            <option value="Colombo">Colombo</option>
+            <option value="Guarapuava">Guarapuava</option>
+          </select>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px;">TIPO DE BDI PADRÃO</label>
+          <select id="bdiConfig" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);outline:none;">
+            <option value="privada">Obra Privada (22–28%)</option>
+            <option value="publica">Obra Pública (25–30%)</option>
+          </select>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
+          <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:8px;">REGIME DE MÃO DE OBRA PADRÃO</label>
+          <select id="moConfig" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;background:var(--bg);color:var(--text);outline:none;">
+            <option value="clt">CLT / Carteira Assinada (~70% encargos)</option>
+            <option value="pj">PJ / Autônomo (~25% encargos)</option>
+          </select>
+        </div>
+
+        <button onclick="saveConfig()" style="background:var(--orange);color:#fff;border:none;border-radius:var(--radius);padding:11px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background 0.15s;" onmouseover="this.style.background='#C9540A'" onmouseout="this.style.background='var(--orange)'">
+          Salvar configurações
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── CONFIG ──
+const SYSTEM_PROMPT = `Você é um orçamentista especializado em construção civil para o mercado do Paraná, Brasil. Você atua na plataforma CAPTURAOBRA — hub de inteligência e operação para a construção civil.
+
+SEU CONHECIMENTO INCLUI:
+- Impermeabilização: lajes, terraços, subsolos, calhas, fundações, reservatórios (manta asfáltica, argamassa polimérica, cristalização, elastômero acrílico, poliuretano)
+- Pintura predial: tinta acrílica, textura, verniz, massa corrida, selador, preparação de superfície, fachadas, internas, industriais
+- Reformas: hidráulica, elétrica, revestimentos, drywall, forro, esquadrias, pisos, banheiros, cozinhas, demolição
+- Estrutura: alvenaria, concreto armado, telhados, coberturas, fundações, estrutura metálica
+- Instalações: elétrica, hidráulica, ar-condicionado, SPDA, CFTV, PPCI
+- Manutenção predial e facilities
+
+TABELAS DE REFERÊNCIA:
+- SINAPI/CEF — Sistema Nacional de Pesquisa de Custos e Índices da Construção Civil
+- SEOP-PR — Secretaria de Estado de Obras Públicas do Paraná
+- TCPO — Tabela de Composições de Preços para Orçamentos (Pini)
+- Pesquisa de mercado regional: Curitiba, Londrina, Maringá, Cascavel, Ponta Grossa, interior PR
+
+PREMISSAS REGIONAIS — PARANÁ 2025:
+- BDI obras privadas: 22% a 28%
+- BDI obras públicas: 25% a 30%
+- Encargos sociais CLT: ~70% sobre salário
+- Encargos sociais PJ/autônomo: ~25%
+- Curitiba e RMC (São José dos Pinhais, Colombo, Araucária etc): +8% a +12% sobre referência SINAPI nacional
+- Interior PR: referência SINAPI nacional ± 3%
+
+FORMATO OBRIGATÓRIO PARA ORÇAMENTOS:
+Sempre apresente na seguinte estrutura:
+
+**Escopo interpretado:** [resumo do que foi entendido]
+
+**Premissas adotadas:** [o que foi assumido]
+
+Em seguida, apresente a tabela EXATAMENTE neste formato markdown:
+
+| Item | Descrição | Unid | Quant | Preço Unit (R$) | Total (R$) |
+|------|-----------|------|-------|-----------------|------------|
+| 1 | [item] | [un] | [qt] | [valor] | [total] |
+| ... | ... | ... | ... | ... | ... |
+| SUB | Subtotal Material | — | — | — | R$ X.XXX,XX |
+| SUB | Subtotal Mão de Obra | — | — | — | R$ X.XXX,XX |
+| BDI | BDI (XX%) | — | — | — | R$ X.XXX,XX |
+| TOT | **TOTAL GERAL** | — | — | — | **R$ X.XXX,XX** |
+
+Após a tabela:
+**Referências:** [fontes usadas para cada grupo de preço]
+
+**Observações:** [alertas, variáveis, recomendações técnicas]
+
+E finalize com 3 sugestões de detalhamento no formato:
+[TAG]texto da sugestão[/TAG]
+[TAG]texto da sugestão[/TAG]
+[TAG]texto da sugestão[/TAG]
+
+REGRAS:
+- Diferencie claramente material e mão de obra
+- Declare todas as premissas adotadas
+- Para impermeabilização: sempre declarar tipo de substrato e sistema utilizado
+- Para pintura predial: sempre incluir preparação de superfície e acesso (andaime/balancim)
+- Use vírgula como decimal: R$ 1.250,00
+- Se faltar info, adote premissas razoáveis e declare
+- Seja profissional, técnico e objetivo`;
+
+let history = [];
+let isBusy = false;
+let orcamentoCount = 0;
+const savedOrcamentos = [];
+let config = { cidade: 'Curitiba', bdi: 'privada', mo: 'clt' };
+
+// ── NAVIGATION ──
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+
+  const titles = {
+    orcamentista: ['Orçamentista IA', 'SINAPI · TCPO · SEOP-PR · Mercado Paraná'],
+    historico: ['Histórico de Orçamentos', 'Orçamentos gerados nesta sessão'],
+    tabelas: ['Tabelas de Referência', 'Fontes de precificação para o Paraná'],
+    config: ['Configurações', 'Parâmetros do orçamentista']
+  };
+
+  if (titles[id]) {
+    document.getElementById('topbarTitle').textContent = titles[id][0];
+    document.getElementById('topbarSub').textContent = titles[id][1];
+  }
+
+  if (id === 'historico') renderHistorico();
+}
+
+// ── CHAT ──
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function fillAndSend(text) {
+  document.getElementById('chatInput').value = text;
+  sendMessage();
+}
+
+function scrollDown() {
+  const area = document.getElementById('chatMessages');
+  area.scrollTop = area.scrollHeight;
+}
+
+function addMessage(role, htmlContent) {
+  const area = document.getElementById('chatMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap' + (role === 'user' ? ' user' : '');
+  const initials = role === 'user' ? 'EU' : 'CO';
+  const cls = role === 'user' ? 'user' : 'bot';
+  wrap.innerHTML = `<div class="avatar ${cls}">${initials}</div><div class="bubble ${cls}">${htmlContent}</div>`;
+  area.appendChild(wrap);
+  scrollDown();
+  return wrap;
+}
+
+function showTyping() {
+  const area = document.getElementById('chatMessages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrap';
+  wrap.id = 'typingIndicator';
+  wrap.innerHTML = `<div class="avatar bot">CO</div><div class="bubble bot"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+  area.appendChild(wrap);
+  scrollDown();
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+function formatAIResponse(text) {
+  let html = text;
+
+  // Tables
+  const tableRegex = /\|(.+)\|\r?\n\|[-| :]+\|\r?\n((?:\|.+\|\r?\n?)+)/g;
+  html = html.replace(tableRegex, (match, header, rows) => {
+    const headers = header.split('|').map(h => h.trim()).filter(Boolean);
+    const rowLines = rows.trim().split('\n');
+    let t = '<table><thead><tr>';
+    headers.forEach(h => { t += `<th>${h.replace(/\*\*/g, '')}</th>`; });
+    t += '</tr></thead><tbody>';
+    rowLines.forEach(row => {
+      const cells = row.split('|').map(c => c.trim()).filter(Boolean);
+      const first = (cells[0] || '').toUpperCase();
+      const isTotal = first === 'TOT' || first.includes('TOTAL');
+      const isSub = first === 'SUB' || first.includes('SUBTOTAL');
+      const isBdi = first === 'BDI';
+      let cls = '';
+      if (isTotal) cls = ' class="total"';
+      else if (isSub || isBdi) cls = ' class="subtotal"';
+      t += `<tr${cls}>`;
+      cells.forEach(c => { t += `<td>${c.replace(/\*\*/g, '')}</td>`; });
+      t += '</tr>';
+    });
+    t += '</tbody></table>';
+    return t;
+  });
+
+  // Tags
+  const tags = [];
+  html = html.replace(/\[TAG\](.*?)\[\/TAG\]/g, (_, tag) => {
+    tags.push(tag.trim());
+    return '';
+  });
+
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+
+  // Append tags
+  if (tags.length) {
+    html += '<div class="tag-row">' + tags.map(t =>
+      `<span class="tag" onclick="fillAndSend('${t.replace(/'/g, "\\'")}')">${t}</span>`
+    ).join('') + '</div>';
+  }
+
+  return html;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || isBusy) return;
+
+  isBusy = true;
+  document.getElementById('sendBtn').disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  addMessage('user', text);
+  history.push({ role: 'user', content: text });
+
+  const systemWithConfig = SYSTEM_PROMPT +
+    `\n\nCONFIGURAÇÃO ATUAL DO USUÁRIO:\n- Cidade padrão: ${config.cidade}\n- BDI: ${config.bdi === 'privada' ? 'Obra privada (22-28%)' : 'Obra pública (25-30%)'}\n- Regime MO: ${config.mo === 'clt' ? 'CLT (~70% encargos)' : 'PJ (~25% encargos)'}`;
+
+  showTyping();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: systemWithConfig, messages: history })
+    });
+
+    const data = await res.json();
+    const reply = data.content || data.error || 'Erro ao processar resposta.';
+
+    history.push({ role: 'assistant', content: reply });
+
+    removeTyping();
+    addMessage('bot', formatAIResponse(reply));
+
+    // save to history
+    if (reply.length > 100 && reply.includes('R$')) {
+      orcamentoCount++;
+      const totalMatch = reply.match(/TOTAL GERAL.*?R\$\s*([\d.,]+)/i);
+      savedOrcamentos.unshift({
+        id: orcamentoCount,
+        titulo: text.substring(0, 60),
+        data: new Date().toLocaleDateString('pt-BR'),
+        total: totalMatch ? 'R$ ' + totalMatch[1] : '—',
+        resumo: text
+      });
+    }
+
+  } catch (err) {
+    removeTyping();
+    addMessage('bot', '<strong>Erro de conexão.</strong><br>Verifique se o servidor está rodando e tente novamente.');
+  }
+
+  isBusy = false;
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+// ── HISTÓRICO ──
+function renderHistorico() {
+  const cont = document.getElementById('historicoContent');
+  if (!savedOrcamentos.length) {
+    cont.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><p>Nenhum orçamento gerado ainda.<br>Use o Orçamentista IA para começar.</p></div>`;
+    return;
+  }
+  cont.innerHTML = '<div class="history-grid">' + savedOrcamentos.map(o => `
+    <div class="history-card">
+      <div class="hc-top">
+        <div class="hc-title">#${o.id} · ${o.data}</div>
+      </div>
+      <div class="hc-total">${o.total}</div>
+      <div class="hc-meta">${o.titulo}</div>
+    </div>
+  `).join('') + '</div>';
+}
+
+// ── CONFIG ──
+function saveConfig() {
+  config.cidade = document.getElementById('cidadeConfig').value;
+  config.bdi = document.getElementById('bdiConfig').value;
+  config.mo = document.getElementById('moConfig').value;
+  alert('Configurações salvas!');
+}
+</script>
+</body>
+</html>
