@@ -18,7 +18,7 @@ async function callClaude(system, messages) {
   const https = require('https');
 
   const body = JSON.stringify({
-    model: 'claude-sonnet-4-5-20251001',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4096,
     system,
     messages,
