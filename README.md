@@ -74,3 +74,12 @@ Se quiser rodar direto no Claude Code como ferramenta MCP, adicione ao seu `clau
   ]
 }
 ```
+
+## Projeto SION ERP — planejamento inicial
+
+A evolução para o SION ERP deve ser feita em fases. A fundação proposta está documentada nos arquivos abaixo antes da implementação dos módulos:
+
+- `docs/architecture/sion-erp-architecture.md` — arquitetura em camadas, decisões técnicas e estrutura de pastas.
+- `docs/database/sion-erp-schema.md` — modelo de dados inicial e estratégia de segurança.
+- `docs/roadmap/sion-erp-roadmap.md` — fases de entrega e critérios de avanço.
+- `docs/architecture/sion-erp-definitive-architecture.md` — arquitetura definitiva, RBAC, banco, testes, deploy, CI/CD, backup, auditoria, logs, LGPD e roadmap por versões.
